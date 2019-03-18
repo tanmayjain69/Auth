@@ -56,6 +56,21 @@ def login():
     Button(login_screen, text="Login", width=10, height=1, command=login_verify).pack()
 
 
+def delete_user():
+    with open("current.txt","r") as f:
+        dele=f.read().splitlines()
+        username=dele[0]
+
+        list_of_files = os.listdir()
+        f.close()
+        if username in list_of_files:
+            os.remove(username)
+            os.remove("current.txt")
+
+    main_account_screen()
+
+
+
 
 def register_user():
     username_info = username.get()
@@ -81,9 +96,15 @@ def login_verify():
 
     list_of_files = os.listdir()
     if username1 in list_of_files:
-        file1 = open(username1, "r")
+        file1 = open(username1, "r+")
         verify = file1.read().splitlines()
         if password1 in verify:
+            with open("current.txt","w") as f:
+                f.seek(0)  # <- This is the missing piece
+                f.truncate()
+                f.write(username1+"\n")
+                f.write(password1)
+                f.close()
             login_sucess()
 
         else:
@@ -125,10 +146,14 @@ def user_not_found():
 
 def delete_login():
     login_screen.destroy()
+
 def delete_login_success():
     login_success_screen.destroy()
     delete_login()
-
+    main_screen_delete()
+    in_main_screen()
+def main_screen_delete():
+    main_screen.destroy()
 
 def delete_password_not_recognised():
     password_not_recog_screen.destroy()
@@ -150,6 +175,67 @@ def main_account_screen():
     Button(text="Register", height="2", width="30", command=register).pack()
 
     main_screen.mainloop()
+def in_main_screen():
+    global in_main_screen
+    in_main_screen=Tk()
+    in_main_screen.geometry("300x250")
+    in_main_screen.title("Block-It v1.0")
+    Label(in_main_screen,text="Main Menu", bg="light blue", width="300", height="2", font=("Calibri", 13)).pack()
+    Label(in_main_screen,text="").pack()
+    Button(in_main_screen,text="Enter  new credentials with url",bg="#ffa8a8",command=cred_url_screen).pack()
+    Label(in_main_screen,text="").pack()
+    Button(in_main_screen,text="Enter  new credentials without url",bg="#ff9b9b").pack()
+    Label(in_main_screen,text="").pack()
+
+    Button(in_main_screen,text="Delete User",command=delete_user).pack()
+    in_main_screen.mainloop()
+def in_main_screen_destroy():
+    del in_main_screen
 
 
+
+def  cred_url_screen():
+    global cred_url_screen
+    global url
+    global pwd
+    global user
+    global pwd_entry
+    global user_entry
+    global url_entry
+    url=StringVar()
+    user = StringVar()
+    pwd = StringVar()
+    cred_url_screen=Toplevel(in_main_screen)
+    cred_url_screen.geometry("300x250")
+    cred_url_screen.title("Block-It v1.0")
+    Label(cred_url_screen, text="Fill Every Box Below", bg="light blue", width="300", height="2", font=("Calibri", 13)).pack()
+    user_lable = Label(cred_url_screen, text="Username * ")
+    user_lable.pack()
+    user_entry = Entry(cred_url_screen, textvariable=user)
+    user_entry.pack()
+    pwd_lable = Label(cred_url_screen, text="Password * ")
+    pwd_lable.pack()
+    pwd_entry = Entry(cred_url_screen, textvariable=pwd, show='*')
+    pwd_entry.pack()
+    url_label = Label(cred_url_screen, text="Url * ")
+    url_label.pack()
+    url_entry = Entry(cred_url_screen, textvariable=url)
+    url_entry.pack()
+    Label(cred_url_screen, text="").pack()
+    Button(cred_url_screen, text="Verify and Add", width=10, height=1, bg="#ed9857", command=register_site).pack()
+def register_site():
+    ui = user.get()
+    print(ui)
+    pi = pwd.get()
+    url_info=url.get()
+    print(url_info+"\t"+ui + "\t"+pi)
+    file = open(ui, "w")
+    file.write(url_info+"\t"+ui + "\t"+pi)
+    file.close()
+
+    user_entry.delete(0, END)
+    pwd_entry.delete(0, END)
+    url_entry.delete(0, END)
+
+    Label(cred_url_screen, text="Site ADded", fg="green", font=("calibri", 11)).pack()
 main_account_screen()

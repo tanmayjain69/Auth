@@ -8,8 +8,8 @@ import ipfsapi
 import os
 
 from Encryption.Encrypt import get_private_key
-if(first_time==1):
-    get_private_key()
+# if(first_time==1):
+# #     get_private_key()
 with open("private_key.pem", "rb") as key_file:
     private_key = serialization.load_pem_private_key(
         key_file.read(),
@@ -21,10 +21,10 @@ pem = p_key.public_bytes(
     encoding=serialization.Encoding.PEM,
     format=serialization.PublicFormat.SubjectPublicKeyInfo
 )
+print(len(pem))
 try:
     api=ipfsapi.connect('127.0.0.1',5001)
     print("Connection to the server established")
-
 
     print("Enter the site url")
     url=str(input())
@@ -34,6 +34,7 @@ try:
     user_name=str.encode(user_name)
     print("Enter Password")
     password=input()
+    password=str.encode(password)
 
     encrypted_password = p_key.encrypt(
         password,
@@ -51,8 +52,6 @@ try:
             label=None
         )
     )
-    print(encrypted_url)
-
 
     # print(original_message.decode())
     encrypted_username = p_key.encrypt(
@@ -63,13 +62,32 @@ try:
             label=None
         )
     )
-    site=api.add_str(encrypted_url) #hash of the site url
-    pkey_object=api.object_patch_append_data(site,io.BytesIO(pem))
-    pass_object=api.object_patch_append_data(site,io.BytesIO(encrypted_password))
-    user_name_object = api.object_patch_append_data(site, io.BytesIO(encrypted_username))
+    combined_encrytped=encrypted_username+encrypted_password+pem
+    combined_object=api.add_bytes(combined_encrytped)
+    print(len(api.cat(combined_object)))
 
 
-    # print(api.object_get('QmWfVY9y3xjsixTgbd9AorQxH7VtMpzfx2HaWtsoUYecaX'))
+    print(private_key.decrypt(
+        api.cat(combined_object)[:256],
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )))
+    print(private_key.decrypt(
+        api.cat(combined_object)[256:512],
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )))
+    print(api.cat(combined_object)[512:963])
+    if(pem==api.cat(combined_object)[512:963]):
+        print("true")
+
+    # print(api.ls(link_obj))
+
+
 
 
 
