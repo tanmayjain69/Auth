@@ -1,5 +1,9 @@
 from tkinter import *
 import os
+import time
+
+from Encryption.filehandle import save
+
 
 def register():
     global register_screen
@@ -225,10 +229,11 @@ def  cred_url_screen():
     Button(cred_url_screen, text="Verify and Add", width=10, height=1, bg="#ed9857", command=register_site).pack()
 def register_site():
     ui = user.get()
-    print(ui)
+
     pi = pwd.get()
     url_info=url.get()
-    print(url_info+"\t"+ui + "\t"+pi)
+    val=save(url_info,ui,pi)
+
     file = open(ui, "w")
     file.write(url_info+"\t"+ui + "\t"+pi)
     file.close()
@@ -237,5 +242,9 @@ def register_site():
     pwd_entry.delete(0, END)
     url_entry.delete(0, END)
 
-    Label(cred_url_screen, text="Site ADded", fg="green", font=("calibri", 11)).pack()
+    suc=Label(cred_url_screen, text="Site Added", fg="green", font=("calibri", 11))
+    suc.pack()
+
+    suc.place_forget()
+
 main_account_screen()
