@@ -1,161 +1,155 @@
 from tkinter import *
 import os
 
-creds = 'tempfile.txt'
+def register():
+    global register_screen
+    register_screen = Toplevel(main_screen)  #diffrent screens mean diffrent windows
+    register_screen.title("Register")
+    register_screen.geometry("300x250")
 
-# def register_user():
-#     username_info=username.get()
-#     password_info=password.get()
-#
-#     file=open(username_info+".txt","w")
-#     file.write(username_info+"\n")
-#     file.write(password_info+"\n")
-#     file.close()
-#
-#     username_entry.delete(0,END)
-#     password_entry.delete(0,END)
-#
-#     Label(screen_reg,text="Sign up Success",fg="green",font=("calibri",11)).pack()
-# def register():  #regestration screen
-#     global screen_reg
-#     screen_reg=Toplevel(screen)
-#     screen_reg.title("Sign Up")
-#     screen_reg.geometry("300x250")
-#
-#     global username,username_entry  #global variable to use outside function
-#     global password, password_entry
-#     username=StringVar()
-#     password=StringVar()
-#
-#
-#     Label(screen_reg, text="Enter You Desired Details * ").pack()
-#     Label(screen_reg, text="").pack()
-#     Label(screen_reg,text="Username * ").pack()
-#     username_entry= Entry(screen_reg,textvariable=username)
-#     username_entry.pack()
-#     Label(screen_reg,text="Password * ").pack()
-#     password_entry = Entry(screen_reg,textvariable=password)
-#     password_entry.pack()
-#     Label(screen_reg, text="").pack()
-#     Button(screen_reg,text="Sign Up", height="1", width="10",command=register_user()).pack()
-#
-#
-# def login():
-#     print("LOgged in")
-#
-# def main_screen():
-#     global screen  #to acces from another function
-#     screen=Tk()  #main object for tkinter
-#     screen.geometry("300x250")
-#     screen.title("SmartSafe")
-#     Label(text="Safe 1.0",bg="light blue",width="300",height="2",font=("Calibri",13)).pack()
-#     Label(text="").pack()
-#     Button(text="Login",height="2",width="30",command=login).pack()
-#     Label(text="").pack()
-#     Button(text="Sign Up",height="2",width="30",command=register).pack()
-#     screen.mainloop()
-# main_screen()
-def Signup():
-    global pwordE
-    global nameE
-    global roots
+    global username
+    global password
+    global username_entry
+    global password_entry
+    username = StringVar()
+    password = StringVar()
 
-    roots = Tk()
-    roots.title('Signup')
-    instruction = Label(roots, text='Please Enter new Credentials')
-    instruction.grid(row=0, column=0, sticky=E)
-
-    nameL = Label(roots, text='New Username: ')
-    pwordL = Label(roots, text='New Password: ')
-    nameL.grid(row=1, column=0, sticky=W)
-    pwordL.grid(row=2, column=0, sticky=W)
-
-    nameE = Entry(roots)
-    pwordE = Entry(roots, show='*')
-    nameE.grid(row=1, column=1)
-    pwordE.grid(row=2, column=1)
-
-    signupButton = Button(roots, text='Signup', command=FSSignup)
-    signupButton.grid(columnspan=2, sticky=W)
-    roots.mainloop()
-
-def main_screen():
-    global screen  #to acces from another function
-    screen=Tk()  #main object for tkinter
-    screen.geometry("300x250")
-    screen.title("SmartSafe")
-    Label(text="Safe 1.0",bg="light blue",width="300",height="2",font=("Calibri",13)).pack()
-    Label(text="").pack()
-    Button(text="Login",height="2",width="30",command=Login).pack()
-    Label(text="").pack()
-    Button(text="Sign Up",height="2",width="30",command=Signup).pack()
-    screen.mainloop()
-def FSSignup():
-    with open(creds, 'w') as f:
-        f.write(nameE.get())
-        f.write('\n')
-        f.write(pwordE.get())
-        f.close()
-
-    roots.destroy()
-    Login()
+    Label(register_screen, text="Please enter details below", bg="light blue").pack()
+    Label(register_screen, text="").pack()
+    username_lable = Label(register_screen, text="Username * ")
+    username_lable.pack()
+    username_entry = Entry(register_screen, textvariable=username)
+    username_entry.pack()
+    password_lable = Label(register_screen, text="Password * ")
+    password_lable.pack()
+    password_entry = Entry(register_screen, textvariable=password, show='*')
+    password_entry.pack()
+    Label(register_screen, text="").pack()
+    Button(register_screen, text="Register", width=10, height=1, bg="#ed9857", command=register_user).pack()
 
 
-def Login():
-    global nameEL
-    global pwordEL
-    global rootA
+def login():
+    global login_screen
+    login_screen = Toplevel(main_screen)
+    login_screen.title("Login")
+    login_screen.geometry("300x250")
+    Label(login_screen, text="Please enter details below to login").pack()
+    Label(login_screen, text="").pack()
 
-    rootA = Tk()
+    global username_verify
+    global password_verify
 
-    rootA.title('Login')
+    username_verify = StringVar()
+    password_verify = StringVar()
 
-    instruction = Label(rootA, text='Please Login\n')
-    instruction.grid(columnspan=5)
+    global username_login_entry
+    global password_login_entry
 
-    nameL = Label(rootA, text='Username:')
-    pwordL = Label(rootA, text='Password:')
-    nameL.grid(row=1,columnspan=5, column=3)
-    pwordL.grid(row=3, columnspan=5, column=3)
-
-    nameEL = Entry(rootA)
-    pwordEL = Entry(rootA, show='*')
-    nameEL.grid(row=2, columnspan=5, column=3)
-    pwordEL.grid(row=4, columnspan=5, column=3)
-
-    loginB = Button(rootA, text='Login', command=CheckLogin)
-    loginB.grid(columnspan=25, column=5)
-
-    rmuser = Button(rootA, text='Sign Up', fg='red', command=Signup)
-    rmuser.grid(columnspan=25, column=5)
-    rootA.mainloop()
+    Label(login_screen, text="Username * ").pack()
+    username_login_entry = Entry(login_screen, textvariable=username_verify)
+    username_login_entry.pack()
+    Label(login_screen, text="").pack()
+    Label(login_screen, text="Password * ").pack()
+    password_login_entry = Entry(login_screen, textvariable=password_verify, show='*')
+    password_login_entry.pack()
+    Label(login_screen, text="").pack()
+    Button(login_screen, text="Login", width=10, height=1, command=login_verify).pack()
 
 
-def CheckLogin():
-    with open(creds) as f:
-        data = f.readlines()
-        uname = data[0].rstrip()
-        pword = data[1].rstrip()
 
-    if nameEL.get() == uname and pwordEL.get() == pword:
-        r = Tk()
-        r.title(':D')
-        r.geometry('150x50')
-        rlbl = Label(r, text='\n[+] Logged In')
-        rlbl.pack()
-        r.mainloop()
+def register_user():
+    username_info = username.get()
+    password_info = password.get()
+
+    file = open(username_info, "w")
+    file.write(username_info + "\n")
+    file.write(password_info)
+    file.close()
+
+    username_entry.delete(0, END)
+    password_entry.delete(0, END)
+
+    Label(register_screen, text="Registration Success", fg="green", font=("calibri", 11)).pack()
+
+
+
+def login_verify():
+    username1 = username_verify.get()
+    password1 = password_verify.get()
+    username_login_entry.delete(0, END)
+    password_login_entry.delete(0, END)
+
+    list_of_files = os.listdir()
+    if username1 in list_of_files:
+        file1 = open(username1, "r")
+        verify = file1.read().splitlines()
+        if password1 in verify:
+            login_sucess()
+
+        else:
+            password_not_recognised()
+
     else:
-        r = Tk()
-        r.title('D:')
-        r.geometry('150x50')
-        rlbl = Label(r, text='\n[! Invalid Login')
-        rlbl.pack()
-        r.mainloop()
+        user_not_found()
 
 
-def DelUser():
-    os.remove(creds)
-    rootA.destroy()
-    Signup()
+# Designing popup for login success
 
-main_screen()
+def login_sucess():
+    global login_success_screen
+    login_success_screen = Toplevel(login_screen)
+    login_success_screen.title("Success")
+    login_success_screen.geometry("150x100")
+    Label(login_success_screen, text="Login Success").pack()
+    Button(login_success_screen, text="OK", command=delete_login_success).pack()
+
+
+
+def password_not_recognised():
+    global password_not_recog_screen
+    password_not_recog_screen = Toplevel(login_screen)
+    password_not_recog_screen.title("Success")
+    password_not_recog_screen.geometry("150x100")
+    Label(password_not_recog_screen, text="Invalid Password ").pack()
+    Button(password_not_recog_screen, text="OK", command=delete_password_not_recognised).pack()
+
+
+
+def user_not_found():
+    global user_not_found_screen
+    user_not_found_screen = Toplevel(login_screen)
+    user_not_found_screen.title("Success")
+    user_not_found_screen.geometry("150x100")
+    Label(user_not_found_screen, text="User Not Found").pack()
+    Button(user_not_found_screen, text="OK", command=delete_user_not_found_screen).pack()
+
+def delete_login():
+    login_screen.destroy()
+def delete_login_success():
+    login_success_screen.destroy()
+    delete_login()
+
+
+def delete_password_not_recognised():
+    password_not_recog_screen.destroy()
+
+
+def delete_user_not_found_screen():
+    user_not_found_screen.destroy()
+
+
+def main_account_screen():
+    global main_screen
+    main_screen = Tk()
+    main_screen.geometry("300x250")
+    main_screen.title("Account Login")
+    Label(text="Block-It v1.0", bg="light blue", width="300", height="2", font=("Calibri", 13)).pack()
+    Label(text="").pack()
+    Button(text="Login", height="2", width="30", command=login).pack()
+    Label(text="").pack()
+    Button(text="Register", height="2", width="30", command=register).pack()
+
+    main_screen.mainloop()
+
+
+main_account_screen()
