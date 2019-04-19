@@ -1,8 +1,8 @@
 from tkinter import *
 import os
 import time
-
-from Encryption.filehandle import save
+from firebase import firebase
+from Encryption.filehandle import save,save_with_url
 
 
 def register():
@@ -232,7 +232,7 @@ def register_site():
 
     pi = pwd.get()
     url_info=url.get()
-    val=save(url_info,ui,pi)
+    save_with_url(url_info,ui,pi) #storin it in ipfs
 
     file = open(ui, "w")
     file.write(url_info+"\t"+ui + "\t"+pi)
