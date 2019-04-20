@@ -1,7 +1,7 @@
 from tkinter import *
 import os
 import time
-from firebase import firebase
+
 from Encryption.filehandle import save,save_with_url
 
 
