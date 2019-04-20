@@ -3,6 +3,10 @@ import os
 import time
 
 from Encryption.filehandle import save,save_with_url
+global fb
+
+
+fb = firebase.FirebaseApplication('https://login-ce190.firebaseio.com', None)
 
 
 def register():
@@ -61,7 +65,8 @@ def login():
 
 
 def delete_user():
-    with open("current.txt","r") as f:
+    
+    '''with open("current.txt","r") as f:
         dele=f.read().splitlines()
         username=dele[0]
 
@@ -69,7 +74,9 @@ def delete_user():
         f.close()
         if username in list_of_files:
             os.remove(username)
-            os.remove("current.txt")
+            os.remove("current.txt")'''
+
+    fb.delete('/users/', curr_logged_in)
 
     main_account_screen()
 
@@ -80,42 +87,50 @@ def register_user():
     username_info = username.get()
     password_info = password.get()
 
-    file = open(username_info, "w")
-    file.write(username_info + "\n")
-    file.write(password_info)
-    file.close()
-
-    username_entry.delete(0, END)
-    password_entry.delete(0, END)
-
-    Label(register_screen, text="Registration Success", fg="green", font=("calibri", 11)).pack()
-
+    user_exist = fb.get('/users/', None)
+    if user_exist.get(username_info, '') != '':
+        Label(register_screen, text="USERNAME ALREADY EXISTS!! ENTER ANOTHER USERNAME!!", fg="red", font=("calibri", 11)).pack()
+    else:
+        sent = {'user': username_info, 'pwd': password_info, 'stat': '0'}
+        try:
+            res = fb.put('/users/', username_info, sent)
+            username_entry.delete(0, END)
+            password_entry.delete(0, END)
+            Label(register_screen, text="Registration Success", fg="green", font=("calibri", 11)).pack()
+        except Exception as e:
+            Label(register_screen, text=e, fg="red", font=("calibri", 11)).pack()
 
 
 def login_verify():
+
     username1 = username_verify.get()
     password1 = password_verify.get()
+    global curr_logged_in
+    curr_logged_in = username1
     username_login_entry.delete(0, END)
     password_login_entry.delete(0, END)
 
-    list_of_files = os.listdir()
-    if username1 in list_of_files:
-        file1 = open(username1, "r+")
-        verify = file1.read().splitlines()
-        if password1 in verify:
-            with open("current.txt","w") as f:
-                f.seek(0)  # <- This is the missing piece
-                f.truncate()
-                f.write(username1+"\n")
-                f.write(password1)
-                f.close()
-            login_sucess()
+    user_exist = fb.get('/users/', username1)
+    
+    if user_exist=={}:
+        user_not_found()
 
-        else:
-            password_not_recognised()
+    elif user_exist['pwd']!=password1:
+        password_not_recognised()
+        
+    elif user_exist['stat']=='1':
+        already_logged_in()
 
     else:
-        user_not_found()
+                
+        sent = {'user': username1, 'pwd': password1, 'stat': '1'}
+        try:
+            res = fb.put('/users/', username1, sent)
+            login_sucess()
+        except Exception as e:
+            login_failed(e)
+            
+
 
 
 # Designing popup for login success
@@ -128,6 +143,14 @@ def login_sucess():
     Label(login_success_screen, text="Login Success").pack()
     Button(login_success_screen, text="OK", command=delete_login_success).pack()
 
+def login_failed(e):
+    global login_failed_screen
+    login_failed_screen = Toplevel(login_screen)
+    login_failed_screen.title("Success")
+    login_failed_screen.geometry("150x100")
+    Label(login_failed_screen, text=e).pack()
+    Button(login_failed_screen, text="OK", command=delete_login_failed).pack()
+
 
 
 def password_not_recognised():
@@ -138,7 +161,13 @@ def password_not_recognised():
     Label(password_not_recog_screen, text="Invalid Password ").pack()
     Button(password_not_recog_screen, text="OK", command=delete_password_not_recognised).pack()
 
-
+def already_logged_in():
+    global already_logged_in_screen
+    already_logged_in_screen = Toplevel(login_screen)
+    already_logged_in_screen.title("FAILED")
+    already_logged_in_screen.geometry("150x100")
+    Label(already_logged_in_screen, text="ALREADY LOGGED IN").pack()
+    Button(already_logged_in_screen, text="OK", command=delete_already_logged_in).pack()
 
 def user_not_found():
     global user_not_found_screen
@@ -151,11 +180,18 @@ def user_not_found():
 def delete_login():
     login_screen.destroy()
 
+def delete_login_failed():
+    login_failed_screen.destroy()
+
 def delete_login_success():
     login_success_screen.destroy()
     delete_login()
     main_screen_delete()
     in_main_screen()
+    
+def delete_already_logged_in():
+    already_logged_in_screen.destroy()
+
 def main_screen_delete():
     main_screen.destroy()
 
