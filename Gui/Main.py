@@ -1,16 +1,33 @@
 from tkinter import *
-import os
-import time
 
-from Encryption.filehandle import save,save_with_url
-global fb
+import subprocess
+import pyrebase
+import multiprocessing
+from threading import Thread
+from firebase import firebase
 
+curr_logged_in=""
+config = {
+  "apiKey": "AIzaSyCzWwwT2EVNV-PR4QFk3UVMXHT_P94C3FY",
+  "authDomain": "login-ce190.firebaseapp.com",
+  "databaseURL": "https://login-ce190.firebaseio.com/",
+     "storageBucket": "login-ce190.appspot.com"
+}
+
+db = pyrebase.initialize_app(config)
+fbbd = db.database()
+auth=db.auth()
+from Encryption.filehandle import save_with_url,fetch
+# global fb
+current_machine_id = subprocess.check_output('wmic csproduct get uuid').decode().split('\n')[1].strip()
 
 fb = firebase.FirebaseApplication('https://login-ce190.firebaseio.com', None)
+# fb.put("/current/", current_machine_id, "none")
 
 
 def register():
     global register_screen
+
     register_screen = Toplevel(main_screen)  #diffrent screens mean diffrent windows
     register_screen.title("Register")
     register_screen.geometry("300x250")
@@ -24,7 +41,7 @@ def register():
 
     Label(register_screen, text="Please enter details below", bg="light blue").pack()
     Label(register_screen, text="").pack()
-    username_lable = Label(register_screen, text="Username * ")
+    username_lable = Label(register_screen, text="Email * ")
     username_lable.pack()
     username_entry = Entry(register_screen, textvariable=username)
     username_entry.pack()
@@ -68,15 +85,15 @@ def delete_user():
     
     '''with open("current.txt","r") as f:
         dele=f.read().splitlines()
-        username=dele[0]
-
-        list_of_files = os.listdir()
-        f.close()
-        if username in list_of_files:
-            os.remove(username)
-            os.remove("current.txt")'''
-
-    fb.delete('/users/', curr_logged_in)
+    #     username=dele[0]
+    #
+    #     list_of_files = os.listdir()
+    #     f.close()
+    #     if username in list_of_files:
+    #         os.remove(username)
+    #         os.remove("current.txt")'''
+    #
+    # fb.delete('/users/', curr_logged_in)
 
     main_account_screen()
 
@@ -86,50 +103,67 @@ def delete_user():
 def register_user():
     username_info = username.get()
     password_info = password.get()
+    try:
+        auth.create_user_with_email_and_password(username_info, password_info)
+        user = auth.sign_in_with_email_and_password(username_info, password_info)
+        curr_logged_in=username_info.translate ({ord(c): "=" for c in "!@#$%^&*()[]{};:,./<>?\|`~-=_+"})
+        f = open("curr.txt", "w+")
+        f.write(curr_logged_in)
+        f.close()
+        print("reg",curr_logged_in)
+        Label(register_screen, text="Registration Success", fg="green", font=("calibri", 11)).pack()
+        register_screen.destroy()
+        main_screen_delete()
 
-    user_exist = fb.get('/users/', None)
-    if user_exist.get(username_info, '') != '':
-        Label(register_screen, text="USERNAME ALREADY EXISTS!! ENTER ANOTHER USERNAME!!", fg="red", font=("calibri", 11)).pack()
-    else:
-        sent = {'user': username_info, 'pwd': password_info, 'stat': '0'}
-        try:
-            res = fb.put('/users/', username_info, sent)
-            username_entry.delete(0, END)
-            password_entry.delete(0, END)
-            Label(register_screen, text="Registration Success", fg="green", font=("calibri", 11)).pack()
-        except Exception as e:
-            Label(register_screen, text=e, fg="red", font=("calibri", 11)).pack()
+        in_main_screen_func()
+    except Exception as e:
+        Label(register_screen, text="User Exists", fg="red", font=("calibri", 11)).pack()
 
 
 def login_verify():
 
     username1 = username_verify.get()
     password1 = password_verify.get()
-    global curr_logged_in
-    curr_logged_in = username1
+
+
     username_login_entry.delete(0, END)
     password_login_entry.delete(0, END)
-
-    user_exist = fb.get('/users/', username1)
-    
-    if user_exist=={}:
-        user_not_found()
-
-    elif user_exist['pwd']!=password1:
+    try:
+        user = auth.sign_in_with_email_and_password(username1, password1)
+        curr_logged_in = username1.translate ({ord(c): "=" for c in "!@#$%^&*()[]{};:,./<>?\|`~-=_+"})
+        f = open("curr.txt", "w+")
+        f.write(curr_logged_in)
+        f.close()
+        print(curr_logged_in)
+        fb.put("/current/", current_machine_id, curr_logged_in)
+        login_sucess()
+    except:
         password_not_recognised()
-        
-    elif user_exist['stat']=='1':
-        already_logged_in()
 
-    else:
-                
-        sent = {'user': username1, 'pwd': password1, 'stat': '1'}
-        try:
-            res = fb.put('/users/', username1, sent)
-            login_sucess()
-        except Exception as e:
-            login_failed(e)
+
             
+
+#LOGOUT
+def logout():
+
+    fb.delete('/current/', current_machine_id)
+    # try:
+    #     print(main_screen)
+    # except:
+    #     print("exce")
+    #     in_main_screen.withdraw()
+    #     main_account_screen()
+    #
+    # else:
+    #     in_main_screen.withdraw()
+    #     main_screen.deiconify()
+    in_main_screen.withdraw()
+    main_screen.deiconify()
+
+
+
+
+
 
 
 
@@ -183,17 +217,14 @@ def delete_login():
 def delete_login_failed():
     login_failed_screen.destroy()
 
-def delete_login_success():
-    login_success_screen.destroy()
-    delete_login()
-    main_screen_delete()
-    in_main_screen()
-    
+
 def delete_already_logged_in():
     already_logged_in_screen.destroy()
+def delete_parms():
+    parms_screen.withdraw()
 
 def main_screen_delete():
-    main_screen.destroy()
+    main_screen.withdraw()
 
 def delete_password_not_recognised():
     password_not_recog_screen.destroy()
@@ -215,10 +246,16 @@ def main_account_screen():
     Button(text="Register", height="2", width="30", command=register).pack()
 
     main_screen.mainloop()
-def in_main_screen():
+
+
+def in_main_screen_destroy():
+    del in_main_screen
+def in_main_screen_func():
     global in_main_screen
+
+
     in_main_screen=Tk()
-    in_main_screen.geometry("300x250")
+    in_main_screen.geometry("400x350")
     in_main_screen.title("Block-It v1.0")
     Label(in_main_screen,text="Main Menu", bg="light blue", width="300", height="2", font=("Calibri", 13)).pack()
     Label(in_main_screen,text="").pack()
@@ -226,11 +263,14 @@ def in_main_screen():
     Label(in_main_screen,text="").pack()
     Button(in_main_screen,text="Enter  new credentials without url",bg="#ff9b9b").pack()
     Label(in_main_screen,text="").pack()
+    Button(in_main_screen, text="View Creds", bg="#ff9b9b",command=view_info).pack()
+    Label(in_main_screen, text="").pack()
+    # Button(in_main_screen,text="Delete User",command=delete_user).pack()
+    # Label(in_main_screen, text="").pack()
+    Button(in_main_screen, text="sign-Out", command=logout).pack()
 
-    Button(in_main_screen,text="Delete User",command=delete_user).pack()
+
     in_main_screen.mainloop()
-def in_main_screen_destroy():
-    del in_main_screen
 
 
 
@@ -263,17 +303,18 @@ def  cred_url_screen():
     url_entry.pack()
     Label(cred_url_screen, text="").pack()
     Button(cred_url_screen, text="Verify and Add", width=10, height=1, bg="#ed9857", command=register_site).pack()
+
 def register_site():
-    ui = user.get()
-
-    pi = pwd.get()
-    url_info=url.get()
-    save_with_url(url_info,ui,pi) #storin it in ipfs
-
-    file = open(ui, "w")
-    file.write(url_info+"\t"+ui + "\t"+pi)
-    file.close()
-
+    f = open("curr.txt", "r")
+    curr_logged_in = f.read()
+    f.close()
+    ui = user_entry.get()
+    pi = pwd_entry.get()
+    url_info=url_entry.get()
+    print(curr_logged_in)
+    url_info=url_info.translate ({ord(c): "=" for c in "!@#$%^&*()[]{};:,./<>?\|`~-=_+"})
+    print(url_info)
+    save_with_url(url_info,ui,pi,curr_logged_in) #storin it in ipfs
     user_entry.delete(0, END)
     pwd_entry.delete(0, END)
     url_entry.delete(0, END)
@@ -283,4 +324,93 @@ def register_site():
 
     suc.place_forget()
 
-main_account_screen()
+#view
+def parms():
+    f = open("curr.txt", "r")
+    curr_logged_in = f.read()
+    f.close()
+    global parms
+    global parms_screen
+    fb = firebase.FirebaseApplication('https://login-ce190.firebaseio.com', None)
+    parms_screen = Toplevel(view_info)
+    parms_frame=Frame(parms_screen)
+    parms_frame.grid()
+
+    parms_screen.attributes("-topmost", True)
+    parms_screen.title("Credentials")
+    parms_screen.geometry("250x200")
+
+    res = fb.get('/hash', curr_logged_in)
+    det=fetch(res[value])
+    print(det)
+    Label(parms_frame, text="USERNAME",bg="light blue").grid(row=1, column=5)
+    Label(parms_frame, text=det['usname']).grid(row=3, column=5)
+    Label(parms_frame, text="").grid(row=5, column=0)
+    Label(parms_frame, text="Password", bg="light blue").grid(row=10, column=5)
+    un=Entry(parms_frame,width=10)
+    un.insert(0,det['pwd'])
+    un.grid(row=15, column=5)
+    # Text(parms, text=det['pwd']).pack()
+    Button(parms_frame, text="OK", command=delete_parms).grid(row=5, column=5)
+def onselect(evt):
+    # Note here that Tkinter passes an event object to onselect()
+    global value
+    w = evt.widget
+    index = int(w.curselection()[0])
+    value = w.get(index)
+    try:
+        parms()
+    except:
+        parms_screen.deiconify()
+        parms_screen.lift()
+def delete_login_success():
+    login_success_screen.destroy()
+    delete_login()
+    main_screen_delete()
+    try:
+
+        in_main_screen_func()
+    except:
+        in_main_screen.deiconify()
+
+def view_info():
+    f = open("curr.txt", "r")
+    curr_logged_in=f.read()
+    f.close()
+    global view_info
+    view_info = Tk()
+    view_info.geometry("300x250")
+    view_info.title("Block-It v1.0")
+    lb = Listbox(view_info)
+    print(curr_logged_in)
+    try:
+        res = fb.get('/hash', curr_logged_in)
+        for key in res:
+            lb.insert(END, key)
+        lb.bind("<<ListboxSelect>>", onselect)
+        lb.pack(pady=15)
+    except:
+        suc = Label(cred_url_screen, text="NO sites", fg="green", font=("calibri", 11))
+        suc.pack()
+
+
+def current_name():
+    return curr_logged_in
+if(fb.get("/current/",current_machine_id)==None):
+    main_account_screen()
+else:
+
+    curr_logged_in=fb.get("/current/",current_machine_id)
+    global main_screen
+    main_screen = Tk()
+    main_screen.geometry("300x250")
+    main_screen.title("Account Login")
+    Label(text="Block-It v1.0", bg="light blue", width="300", height="2", font=("Calibri", 13)).pack()
+    Label(text="").pack()
+    Button(text="Login", height="2", width="30", command=login).pack()
+    Label(text="").pack()
+    Button(text="Register", height="2", width="30", command=register).pack()
+    main_screen.withdraw()
+
+    in_main_screen_func()
+# main_account_screen()
